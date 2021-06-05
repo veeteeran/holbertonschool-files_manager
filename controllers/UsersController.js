@@ -17,8 +17,8 @@ class UsersController {
       }
 
       const collection = dbClient.db.collection('users')
-      const cursor = collection.findOne({ email: email })
-      if ((await cursor.count()) > 0) {
+      const cursor = collection.find({ email: email })
+      if (await cursor.count() > 0) {
         response.status(400)
         response.json({ error: "Already exists" })
       } else {
