@@ -41,8 +41,8 @@ class UsersController {
     const token = request.headers['x-token']
     const id = await redisClient.get(`auth_${token}`)
     const o_id = new mongo.ObjectID(id)
-    const user = await dbClient.db.collection('users').findOne({"_id": o_id})
-    console.log(user)
+    const user = await dbClient.db.collection('users').findOne({ "_id": o_id })
+
     if (!user) {
       return response.status(401).json({ error: 'Unauthorized' });
     }
