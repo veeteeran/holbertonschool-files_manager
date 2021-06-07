@@ -11,7 +11,7 @@ class UsersController {
 
       if (!email) {
         response.status(400)
-        response.json({ error: "Missing email" })
+        return response.json({ error: "Missing email" })
       }
 
       if (!password) {
