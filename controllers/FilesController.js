@@ -73,6 +73,7 @@ class FilesController {
       if (!user) return response.status(401).json({ error: 'Unauthorized' })
       
       const { id } = request.params
+      if (user !== id) return response.status(401).json({ error: 'Unauthorized' })
       const objectId = new mongo.ObjectID(id)
       const file = await dbClient.db.collection('files').findOne({
           _id: objectId
