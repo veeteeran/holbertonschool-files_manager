@@ -16,15 +16,13 @@ class AuthController {
 
     if (!user) {
       res.status(401);
-      res.json({ error: 'Unauthorized' });
-    } else {
-      const token = uuidv4();
-      const key = `auth_${token}`;
-      await redisClient.set(key, user._id.toString(), 86400);
-      res.status(200);
-      return res.json({ token });
+      return res.json({ error: 'Unauthorized' });
     }
-    return null;
+    const token = uuidv4();
+    const key = `auth_${token}`;
+    await redisClient.set(key, user._id.toString(), 86400);
+    res.status(200);
+    return res.json({ token });
   }
 
   static async getDisconnect(req, res) {
@@ -36,7 +34,8 @@ class AuthController {
 
     await redisClient.del(`auth_${token}`);
     res.status(204);
-    return res.end();
+    res.end();
+    return null;
   }
 }
 module.exports = AuthController;
