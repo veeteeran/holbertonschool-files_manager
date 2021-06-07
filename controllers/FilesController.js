@@ -84,7 +84,7 @@ class FilesController {
       if (objectId !== file._id) return response.status(401).json({ error: 'Unauthorized' })
       console.log("FILE", file)
 
-      if (!file) return response.status(404).json({ error: 'Not found' });
+      if (!file && (userId !== file.userId)) return response.status(404).json({ error: 'Not found' });
       
       return file;
   }
