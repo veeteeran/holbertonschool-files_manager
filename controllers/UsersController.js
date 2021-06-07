@@ -11,7 +11,7 @@ class UsersController {
 
       if (!email) {
         response.status(400)
-        response.json({ error: "Missing email" })
+        return response.json({ error: "Missing email" })
       }
 
       if (!password) {
@@ -23,7 +23,7 @@ class UsersController {
       const cursor = collection.find({ email: email })
       if (await cursor.count() > 0) {
         response.status(400)
-        response.json({ error: "Already exists" })
+        response.json({ error: "Already exist" })
       } else {
         const hash = createHash('sha1')
         hash.update(password)
