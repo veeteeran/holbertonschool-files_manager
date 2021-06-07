@@ -2,6 +2,7 @@ import dbClient from '../utils/db'
 import redisClient from '../utils/redis'
 import { v4 as uuidv4 } from 'uuid'
 import fs from 'fs'
+const mongo = require('mongodb')
 
 class FilesController {
   static async postUpload(request, response) {
@@ -19,7 +20,7 @@ class FilesController {
 
     if (parentId) {
       const o_id = new mongo.ObjectID(parentId)
-      const file = await dbClient.collection('files').findOne({ "_id": o_id })
+      const file = await dbClient.db.collection('files').findOne({ "_id": o_id })
 
       if (!file) return response.status(400).json({ error: 'Parent not found' })
 
@@ -31,9 +32,10 @@ class FilesController {
     let newFile
     const token = request.headers['x-token']
     const id = await redisClient.get(`auth_${token}`)
+    if (parentId !== 0) parentId = new mongo.ObjectID(parentId)
     if (type === 'folder') {
       newFile = await dbClient.db.collection('files').insertOne({
-        userId: id,
+        userId: new mongo.ObjectID(id),
         name,
         type,
         isPublic,
@@ -50,7 +52,7 @@ class FilesController {
       await fs.promises.writeFile(localPath, inputData)
 
       newFile = await dbClient.db.collection('files').insertOne({
-        userId: id,
+        userId: new mongo.ObjectID(id),
         name,
         type,
         isPublic,
