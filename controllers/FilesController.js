@@ -34,6 +34,7 @@ class FilesController {
     let newFile;
     const token = request.headers['x-token'];
     const id = await redisClient.get(`auth_${token}`);
+    if (!id) return response.status(401).json({ error: 'Unauthorized' });
     if (parentId !== 0) parentId = new mongo.ObjectID(parentId);
     if (type === 'folder') {
       newFile = await dbClient.db.collection('files').insertOne({
