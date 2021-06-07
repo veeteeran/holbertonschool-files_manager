@@ -11,6 +11,8 @@ class AuthController {
     }
     const credentials = Buffer.from(req.headers.authorization.split(' ')[1], 'base64').toString('ascii');
     const [email, password] = credentials.split(':');
+    if (!email || !password) return res.status(401).json({ error: 'Unauthorized' });
+
     const hash = createHash('sha1').update(password).digest('hex');
     const user = await dbClient.db.collection('users').findOne({ email, password: hash });
 
@@ -29,7 +31,7 @@ class AuthController {
     const token = req.headers['x-token'];
     const user = redisClient.get(`auth_${token}`);
     if (!user) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      return res.status(401).json({ error: 'Unauthorized' });
     }
 
     await redisClient.del(`auth_${token}`);
