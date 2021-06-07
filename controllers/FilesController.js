@@ -1,17 +1,15 @@
 import dbClient from '../utils/db'
 import redisClient from '../utils/redis'
 import { v4 as uuidv4 } from 'uuid'
-import { existsSync, mkdirSync } from 'fs'
-import { writeFile } from 'fs/promises';
+import fs from 'fs'
 
 class FilesController {
   static async postUpload(request, response) {
     const {
       name,
       type,
-      parentId,
-      isPublic,
       data } = request.body
+    let {parentId, isPublic = false} = request.body
 
     if (!name) return response.status(400).json({ error: 'Missing name' })
 
@@ -31,10 +29,10 @@ class FilesController {
     }
 
     let newFile
+    const token = request.headers['x-token']
+    const id = await redisClient.get(`auth_${token}`)
     if (type === 'folder') {
-      const token = request.headers['x-token']
-      const id = await redisClient.get(`auth_${token}`)
-      newFile = await dbClient.collection('files').insertOne({
+      newFile = await dbClient.db.collection('files').insertOne({
         userId: id,
         name,
         type,
@@ -43,17 +41,15 @@ class FilesController {
       })
     } else {
       const path = process.env.FOLDER_PATH || '/tmp/files_manager'
-      if (!existsSync(path)) mkdirSync(path)
+      if (!fs.existsSync(path)) fs.mkdirSync(path)
 
       const uuid = uuidv4()
       const localPath = `${path}/${uuid}`
       const inputData = Buffer.from(data, 'base64').toString()
 
-      await writeFile(localPath, inputData)
+      await fs.promises.writeFile(localPath, inputData)
 
-      const token = request.headers['x-token']
-      const id = await redisClient.get(`auth_${token}`)
-      newFile = await dbClient.collection('files').insertOne({
+      newFile = await dbClient.db.collection('files').insertOne({
         userId: id,
         name,
         type,
@@ -62,6 +58,8 @@ class FilesController {
         localPath
       })
     }
-    return response.status(201).json(newFile)
+    return response.status(201).json({id: newFile.insertedId, userId: id, name, type, isPublic, parentId})
   }
 }
+
+module.exports = FilesController
