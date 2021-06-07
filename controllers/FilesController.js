@@ -69,15 +69,18 @@ class FilesController {
   static async getShow(request, response) {
       const token = request.headers['x-token'];
       const user = await redisClient.get(`auth_${token}`)
+      console.log("USER", user)
       
       if (!user) return response.status(401).json({ error: 'Unauthorized' })
       
       const { id } = request.params
-      if (user !== id) return response.status(401).json({ error: 'Unauthorized' })
+      console.log("ID", id)
       const objectId = new mongo.ObjectID(id)
       const file = await dbClient.db.collection('files').findOne({
           _id: objectId
       })
+      if (objectId !== file._id) return response.status(401).json({ error: 'Unauthorized' })
+      console.log("FILE", file)
 
       if (!file) return response.status(404).json({ error: 'Not found' });
       
