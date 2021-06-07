@@ -1,4 +1,6 @@
-/* eslint-disable */import { v4 as uuidv4 } from 'uuid';import fs from 'fs';
+/* eslint-disable */
+import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
 
@@ -66,49 +68,55 @@ class FilesController {
       id: newFile.insertedId, userId: id, name, type, isPublic, parentId,
     });
   }
+
   static async getShow(request, response) {
-      const token = request.headers['x-token'];
-      const user = await redisClient.get(`auth_${token}`)
-      console.log("USER", user)
-      
-      if (!user) return response.status(401).json({ error: 'Unauthorized' })
-      
-      const { id } = request.params
-      console.log("ID", id)
-      const objectId = new mongo.ObjectID(id)
-      const file = await dbClient.db.collection('files').findOne({
-          _id: objectId
-      })
-      const userId = new mongo.ObjectID(user)
-      if (userId !== file.userId) return response.status(401).json({ error: 'Unauthorized' })
-      if (objectId !== file._id) return response.status(401).json({ error: 'Unauthorized' })
-      console.log("FILE", file)
+    const token = request.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
 
-      if (!file && (userId !== file.userId)) return response.status(404).json({ error: 'Not found' });
-      
-      return file;
+    if (!userId) return response.status(401).json({ error: 'Unauthorized' });
+
+    const { id } = request.params;
+    const objectId = new mongo.ObjectID(id);
+    const file = await dbClient.db.collection('files').findOne({
+      _id: objectId,
+    });
+
+    if (!file && (userId !== file.userId)) return response.status(404).json({ error: 'Not found' });
+
+    const doc = {
+      id: file._id,
+      userId: file.userId,
+      name: file.name,
+      type: file.type,
+      isPublic: file.isPublic,
+      parentId: file.parentId,
+    };
+    return response.json(doc);
   }
+
   static async getIndex(request, response) {
-      const token = request.header['x-token'];
-      const user = await redisClient.get(`auth_${token}`)
+    const token = request.header['x-token'];
+    const user = await redisClient.get(`auth_${token}`);
 
-      if (!user) return response.status(401).json({ error: 'Unauthorized' });
+    if (!user) return response.status(401).json({ error: 'Unauthorized' });
 
-      const { parentId, page } = request.query
-      const objectId = new mongo.ObjectID(parentId)
+    const { parentId, page } = request.query;
+    const objectId = new mongo.ObjectID(parentId);
 
-      const files = await dbClient.db.collection('files').find({
-          parentId: objectId
-      }) || []
-      const pages = await dbClient.db.collection('files').aggregate([
-          {'$match' : { 'parentId' : objectId }},
-          {'$facet' : {
-              metadata: [ { $addFields: { page: parseInt(page) } }],
-              data: [{ $skip: 20 }, { $limit: 20 } ]
-          }}
-      ])
-      if (parentId) return files
-      if (page) return pages
+    const files = await dbClient.db.collection('files').find({
+      parentId: objectId,
+    }) || [];
+    const pages = await dbClient.db.collection('files').aggregate([
+      { $match: { parentId: objectId } },
+      {
+        $facet: {
+          metadata: [{ $addFields: { page: parseInt(page) } }],
+          data: [{ $skip: 20 }, { $limit: 20 }],
+        },
+      },
+    ]);
+    if (parentId) return files;
+    if (page) return pages;
   }
 }
 
