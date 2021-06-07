@@ -1,11 +1,12 @@
-const express = require('express')
-const app = express()
-const port = process.env.PORT || 5000
+const express = require('express');
 
-const routes = require('./routes/index')
+const app = express();
+const port = process.env.PORT || 5000;
 
-app.use(routes)
+const routes = require('./routes/index');
 
-app.listen(port, () => console.log(`Server running on port ${port}`))
+app.use(routes);
 
-module.exports = app
+app.listen(port, () => console.log(`Server running on port ${port}`));
+
+module.exports = app;
