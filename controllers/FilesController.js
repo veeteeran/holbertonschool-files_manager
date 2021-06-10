@@ -133,6 +133,24 @@ class FilesController {
 
     return response.json(arr);
   }
+
+  static async putPublish() {
+    const token = request.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
+
+    if (!userId) return response.status(401).json({ error: 'Unauthorized' });
+
+    const { id } = request.params;
+    const objectId = new mongo.ObjectID(id);
+    const file = await dbClient.db.collection('files').findOne({
+      _id: objectId,
+    });
+
+    if (!file) return response.status(404).json({ error: 'Not found' });
+    console.log('before setting isPublic', file.isPublic)
+    file.isPublic = true
+    console.log('after setting isPublic', file.isPublic)
+  }
 }
 
 module.exports = FilesController;
