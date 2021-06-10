@@ -148,7 +148,7 @@ class FilesController {
     if (!file) return response.status(404).json({ error: 'Not found' });
     if (userId !== file.userId.toString()) return response.status(404).json({ error: 'Not found' });
 
-    file.isPublic = false
+    file.isPublic = true
 
     const doc = {
       id: file._id,
@@ -167,6 +167,12 @@ class FilesController {
     const userId = await redisClient.get(`auth_${token}`);
 
     if (!userId) return response.status(401).json({ error: 'Unauthorized' });
+
+    const { id } = request.params;
+    const objectId = new mongo.ObjectID(id);
+    const file = await dbClient.db.collection('files').findOne({
+      _id: objectId,
+    });
 
     file.isPublic = false
 
