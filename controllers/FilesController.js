@@ -81,6 +81,7 @@ class FilesController {
     });
 
     if (!file) return response.status(404).json({ error: 'Not found' });
+    
     if (userId !== file.userId.toString()) return response.status(404).json({ error: 'Not found' });
 
     const doc = {
@@ -132,7 +133,7 @@ class FilesController {
     return response.json(arr);
   }
 
-  static async putPublish() {
+  static async putPublish(request, response) {
     const token = request.headers['x-token'];
     const userId = await redisClient.get(`auth_${token}`);
 
@@ -146,9 +147,8 @@ class FilesController {
 
     if (!file) return response.status(404).json({ error: 'Not found' });
     if (userId !== file.userId.toString()) return response.status(404).json({ error: 'Not found' });
-    console.log('before setting isPublic', file.isPublic)
-    file.isPublic = true
-    console.log('after setting isPublic', file.isPublic)
+
+    file.isPublic = false
 
     const doc = {
       id: file._id,
@@ -158,6 +158,7 @@ class FilesController {
       isPublic: file.isPublic,
       parentId: file.parentId,
     };
+
     return response.status(200).json(doc);
   }
 }
