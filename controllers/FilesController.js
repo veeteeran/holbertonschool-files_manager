@@ -96,23 +96,41 @@ class FilesController {
   }
 
   static async getIndex(request, response) {
-    const token = request.header['x-token'];
+    const token = request.headers['x-token'];
     const userId = await redisClient.get(`auth_${token}`);
 
     if (!userId) return response.status(401).json({ error: 'Unauthorized' });
 
     const { parentId, page = 0 } = request.query;
-    let objectId;
 
-    parentId !== 0 ? objectId = new mongo.ObjectID(parentId) : objectId = new mongo.ObjectID(userId);
+    let pages;
 
-    const pages = await dbClient.db.collection('files').aggregate([
-      { $match: { parentId: objectId } },
-      { $skip: page * 20 },
-      { $limit: 20 }
-    ]);
+    if (parentId) {
+      const objectId = new mongo.ObjectID(parentId);
+      pages = await dbClient.db.collection('files').aggregate([
+        { $match: { parentId: objectId } },
+        { $skip: page * 20 },
+        { $limit: 20 },
+      ]).toArray();
+    } else {
+      const objectId = new mongo.ObjectID(userId);
+      pages = await dbClient.db.collection('files').aggregate([
+        { $match: { userId: objectId } },
+        { $skip: page * 20 },
+        { $limit: 20 },
+      ]).toArray();
+    }
 
-    console.log(pages);
+    const arr = pages.map((page) => ({
+      id: page._id,
+      userId: page.userId,
+      name: page.name,
+      type: page.type,
+      isPublic: page.isPublic,
+      parentId: page.parentId,
+    }));
+
+    return response.json(arr);
   }
 }
 
