@@ -81,8 +81,6 @@ class FilesController {
     });
 
     if (!file) return response.status(404).json({ error: 'Not found' });
-    console.log('userId type: ', typeof(userId))
-    console.log('userId type: ', typeof(file.userId))
     if (userId !== file.userId.toString()) return response.status(404).json({ error: 'Not found' });
 
     const doc = {
@@ -147,9 +145,20 @@ class FilesController {
     });
 
     if (!file) return response.status(404).json({ error: 'Not found' });
+    if (userId !== file.userId.toString()) return response.status(404).json({ error: 'Not found' });
     console.log('before setting isPublic', file.isPublic)
     file.isPublic = true
     console.log('after setting isPublic', file.isPublic)
+
+    const doc = {
+      id: file._id,
+      userId: file.userId,
+      name: file.name,
+      type: file.type,
+      isPublic: file.isPublic,
+      parentId: file.parentId,
+    };
+    return response.status(200).json(doc);
   }
 }
 
