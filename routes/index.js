@@ -14,6 +14,8 @@ router.get('/disconnect', getDisconnect);
 router.get('/users/me', getMe);
 router.get('/files/:id', getShow);
 router.get('/files', getIndex);
+router.put('/files/:id/publish', putPublish);
+router.put('/files/:id/unpublish', putPublish);
 router.use(express.json());
 router.post('/users', postNew);
 router.post('/files', postUpload);
