@@ -81,7 +81,9 @@ class FilesController {
     });
 
     if (!file) return response.status(404).json({ error: 'Not found' });
-    if (file && userId !== file.userId) return response.status(404).json({ error: 'Not found' });
+    console.log('userId type: ', typeof(userId))
+    console.log('userId type: ', typeof(file.userId))
+    if (userId !== file.userId.toString()) return response.status(404).json({ error: 'Not found' });
 
     const doc = {
       id: file._id,
