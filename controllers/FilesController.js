@@ -92,7 +92,7 @@ class FilesController {
       isPublic: file.isPublic,
       parentId: file.parentId,
     };
-    return response.json(doc);
+    return response.status(200).json(doc);
   }
 
   static async getIndex(request, response) {
