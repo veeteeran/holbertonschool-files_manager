@@ -81,7 +81,7 @@ class FilesController {
     });
 
     if (!file) return response.status(404).json({ error: 'Not found' });
-    
+
     if (userId !== file.userId.toString()) return response.status(404).json({ error: 'Not found' });
 
     const doc = {
@@ -147,6 +147,26 @@ class FilesController {
 
     if (!file) return response.status(404).json({ error: 'Not found' });
     if (userId !== file.userId.toString()) return response.status(404).json({ error: 'Not found' });
+
+    file.isPublic = false
+
+    const doc = {
+      id: file._id,
+      userId: file.userId,
+      name: file.name,
+      type: file.type,
+      isPublic: file.isPublic,
+      parentId: file.parentId,
+    };
+
+    return response.status(200).json(doc);
+  }
+
+  static async putUnpublish(request, response) {
+    const token = request.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
+
+    if (!userId) return response.status(401).json({ error: 'Unauthorized' });
 
     file.isPublic = false
 
