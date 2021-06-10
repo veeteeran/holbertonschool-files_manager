@@ -97,23 +97,22 @@ class FilesController {
 
   static async getIndex(request, response) {
     const token = request.header['x-token'];
-    const user = await redisClient.get(`auth_${token}`);
+    const userId = await redisClient.get(`auth_${token}`);
 
-    if (!user) return response.status(401).json({ error: 'Unauthorized' });
+    if (!userId) return response.status(401).json({ error: 'Unauthorized' });
 
-    const { parentId = 0, page = 0 } = request.query;
-    const objectId = new mongo.ObjectID(parentId);
+    const { parentId, page = 0 } = request.query;
+    let objectId;
 
-    const files = await dbClient.db.collection('files').find({
-      parentId: objectId,
-    }) || [];
+    parentId !== 0 ? objectId = new mongo.ObjectID(parentId) : objectId = new mongo.ObjectID(userId);
+
     const pages = await dbClient.db.collection('files').aggregate([
       { $match: { parentId: objectId } },
       { $skip: page * 20 },
       { $limit: 20 }
     ]);
-    if (parentId) return files;
-    if (page) return pages;
+
+    console.log(pages);
   }
 }
 
