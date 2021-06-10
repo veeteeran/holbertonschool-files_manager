@@ -190,6 +190,20 @@ class FilesController {
 
     return response.status(200).json(doc);
   }
+
+  static async getFile(request, response) {
+    const token = request.headers['x-token'];
+    const userId = await redisClient.get(`auth_${token}`);
+    const objectId = new mongo.ObjectID(userId);
+    const file = await dbClient.db.collection('files').findOne({
+      _id: objectId,
+    });
+
+    if (!file) return response.status(404).json({ error: 'Not found' });
+    if (!file.isPublic || userId !== file.userId.toString()) return response.status(404).json({ error: 'Not found' });
+    if (file.type === 'folder') return response.status(400).json({ error: "A folder doesn't have content" })
+    if (!fs.existsSync(file.localPath)) return response.status(404).json({ error: 'Not found' })
+  }
 }
 
 module.exports = FilesController;
