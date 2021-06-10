@@ -209,9 +209,8 @@ class FilesController {
 
     response.setHeader('content-type', mimeType)
     const data = fs.readFileSync(file.localPath, 'utf-8')
-    console.log(data)
 
-    response.end()
+    return response.send(data)
   }
 }
 
