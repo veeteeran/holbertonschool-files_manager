@@ -8,12 +8,17 @@ const mongo = require('mongodb');
 
 class FilesController {
   static async postUpload(request, response) {
+    const token = request.headers['x-token'];
+    const id = await redisClient.get(`auth_${token}`);
+
+    if (!id) return response.status(401).json({ error: 'Unauthorized' });
+
     const {
       name,
       type,
       data,
     } = request.body;
-    let { parentId, isPublic = false } = request.body;
+    let { parentId = 0, isPublic = false } = request.body;
 
     if (!name) return response.status(400).json({ error: 'Missing name' });
 
@@ -21,22 +26,16 @@ class FilesController {
 
     if (!data && type !== 'folder') return response.status(400).json({ error: 'Missing data' });
 
-    if (parentId) {
-      const objectId = new mongo.ObjectID(parentId);
-      const file = await dbClient.db.collection('files').findOne({ _id: objectId });
+    if (parentId !== 0) {
+      parentId = new mongo.ObjectID(parentId);
+      const file = await dbClient.db.collection('files').findOne({ _id: parentId });
 
       if (!file) return response.status(400).json({ error: 'Parent not found' });
 
       if (file && file.type !== 'folder') return response.status(400).json({ error: 'Parent is not a folder' });
-    } else {
-      parentId = 0;
     }
 
     let newFile;
-    const token = request.headers['x-token'];
-    const id = await redisClient.get(`auth_${token}`);
-    if (!id) return response.status(401).json({ error: 'Unauthorized' });
-    if (parentId !== 0) parentId = new mongo.ObjectID(parentId);
     if (type === 'folder') {
       newFile = await dbClient.db.collection('files').insertOne({
         userId: new mongo.ObjectID(id),
@@ -102,7 +101,7 @@ class FilesController {
 
     if (!user) return response.status(401).json({ error: 'Unauthorized' });
 
-    const { parentId, page } = request.query;
+    const { parentId = 0, page = 0 } = request.query;
     const objectId = new mongo.ObjectID(parentId);
 
     const files = await dbClient.db.collection('files').find({
@@ -110,12 +109,8 @@ class FilesController {
     }) || [];
     const pages = await dbClient.db.collection('files').aggregate([
       { $match: { parentId: objectId } },
-      {
-        $facet: {
-          metadata: [{ $addFields: { page: parseInt(page) } }],
-          data: [{ $skip: 20 }, { $limit: 20 }],
-        },
-      },
+      { $skip: page * 20 },
+      { $limit: 20 }
     ]);
     if (parentId) return files;
     if (page) return pages;
