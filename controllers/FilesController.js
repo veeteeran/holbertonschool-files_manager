@@ -200,8 +200,8 @@ class FilesController {
       _id: objectId,
     });
 
-    if (!file || !userId) return response.status(404).json({ error: 'Not found' });
-    if (!file.isPublic && userId !== file.userId.toString()) return response.status(404).json({ error: 'Not found' });
+    if (!file) return response.status(404).json({ error: 'Not found' });
+    if (!file.isPublic && (!userId || userId !== file.userId.toString())) return response.status(404).json({ error: 'Not found' });
     if (file.type === 'folder') return response.status(400).json({ error: "A folder doesn't have content" })
     if (!fs.existsSync(file.localPath)) return response.status(404).json({ error: 'Not found' })
 
