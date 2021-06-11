@@ -195,7 +195,8 @@ class FilesController {
   static async getFile(request, response) {
     const token = request.headers['x-token'];
     const userId = await redisClient.get(`auth_${token}`);
-    const objectId = new mongo.ObjectID(userId);
+    const { id } = request.params;
+    const objectId = new mongo.ObjectID(id);
     const file = await dbClient.db.collection('files').findOne({
       _id: objectId,
     });
