@@ -1,9 +1,8 @@
-/* eslint-disable */
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
+import mime from 'mime-types';
 import dbClient from '../utils/db';
 import redisClient from '../utils/redis';
-import mime from 'mime-types';
 
 const mongo = require('mongodb');
 
@@ -18,8 +17,9 @@ class FilesController {
       name,
       type,
       data,
+      isPublic = false,
     } = request.body;
-    let { parentId = 0, isPublic = false } = request.body;
+    let { parentId = 0 } = request.body;
 
     if (!name) return response.status(400).json({ error: 'Missing name' });
 
@@ -149,7 +149,7 @@ class FilesController {
     if (!file) return response.status(404).json({ error: 'Not found' });
     if (userId !== file.userId.toString()) return response.status(404).json({ error: 'Not found' });
 
-    file.isPublic = true
+    file.isPublic = true;
 
     const doc = {
       id: file._id,
@@ -178,7 +178,7 @@ class FilesController {
     if (!file) return response.status(404).json({ error: 'Not found' });
     if (userId !== file.userId.toString()) return response.status(404).json({ error: 'Not found' });
 
-    file.isPublic = false
+    file.isPublic = false;
 
     const doc = {
       id: file._id,
@@ -203,15 +203,15 @@ class FilesController {
 
     if (!file) return response.status(404).json({ error: 'Not found' });
     if (!file.isPublic && (!userId || userId !== file.userId.toString())) return response.status(404).json({ error: 'Not found' });
-    if (file.type === 'folder') return response.status(400).json({ error: "A folder doesn't have content" })
-    if (!fs.existsSync(file.localPath)) return response.status(404).json({ error: 'Not found' })
+    if (file.type === 'folder') return response.status(400).json({ error: "A folder doesn't have content" });
+    if (!fs.existsSync(file.localPath)) return response.status(404).json({ error: 'Not found' });
 
-    const mimeType = mime.lookup(file.name)
+    const mimeType = mime.lookup(file.name);
 
-    response.setHeader('content-type', mimeType)
-    const data = fs.readFileSync(file.localPath, 'utf-8')
+    response.setHeader('content-type', mimeType);
+    const data = fs.readFileSync(file.localPath, 'utf-8');
 
-    return response.send(data)
+    return response.send(data);
   }
 }
 
